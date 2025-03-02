@@ -12,8 +12,12 @@ from .config import ARTICLES_CACHE_DIR
 
 logger = logging.getLogger(__name__)
 
-pdf_options = PdfFormatOption(pipeline_options=PdfPipelineOptions(generate_picture_images=True))
+pipeline_options = PdfPipelineOptions()
+pipeline_options.ocr_options.use_gpu = False
+pipeline_options.generate_picture_images = False
+pdf_options = PdfFormatOption(pipeline_options=pipeline_options)
 doc_converter = DocumentConverter(format_options={InputFormat.PDF: pdf_options})
+doc_converter = DocumentConverter()
 
 def fetch_and_convert_article(article):
     """
@@ -51,6 +55,9 @@ def fetch_and_convert_article(article):
             f.write(converted_text)
         logger.info("Conversion successful for article '%s'. Cached output.", article["id"])
         return converted_text
+    except SystemExit as se:
+        logger.exception("Docling conversion exited with error code %s for article '%s'. Skipping conversion.", se.code, article["id"])
+        return ""
     except Exception as e:
         logger.exception("Conversion failed for article '%s': %s", article["id"], e)
         return ""
