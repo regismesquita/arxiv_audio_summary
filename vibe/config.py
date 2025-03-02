@@ -6,7 +6,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-CACHE_DIR = "cache"
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+CACHE_DIR = os.path.join(BASE_DIR, "cache")
 if not os.path.exists(CACHE_DIR):
     os.makedirs(CACHE_DIR)
     logger.debug("Created cache directory: %s", CACHE_DIR)

@@ -1,10 +1,13 @@
 from flask import Flask, send_file, request, jsonify, render_template
 import logging
-from .orchestrator import process_articles
-from .config import CACHE_DIR
+from vibe.orchestrator import process_articles
+from vibe.config import CACHE_DIR
+
+from flask_socketio import SocketIO, emit
 
 logger = logging.getLogger(__name__)
-app = Flask(__name__)
+app = Flask(__name__, template_folder="../templates")
+socketio = SocketIO(app)
 
 @app.route("/process", methods=["POST"])
 def process_endpoint():
@@ -18,15 +21,22 @@ def process_endpoint():
     new_only = data.get("new_only", False)
 
     logger.info("Processing request with user_info: %s, max_articles: %s, new_only: %s", user_info, max_articles, new_only)
-    final_summary = process_articles(user_info, max_articles=max_articles, new_only=new_only)
+    # Define trace_callback to emit trace messages via WebSockets
+    def trace_callback(message):
+        socketio.emit("trace", {"message": message})
+    final_summary = process_articles(user_info, arxiv_url=None, llm_url=None, model_name=None, max_articles=max_articles, new_only=new_only, trace_callback=trace_callback)
     if not final_summary.strip():
         logger.error("No summaries generated.")
         return jsonify({"error": "No summaries generated."}), 500
 
-    output_mp3 = f"{CACHE_DIR}/final_output.mp3"
+    import uuid, os
+    mp3_filename = f"final_{uuid.uuid4().hex}.mp3"
+    output_mp3 = os.path.join(CACHE_DIR, mp3_filename)
+
     try:
-        from .tts import text_to_speech
+        from vibe.tts import text_to_speech
         text_to_speech(final_summary, output_mp3)
+        trace_callback("Text-to-Speech conversion complete. MP3 file generated.")
     except Exception as e:
         logger.exception("TTS conversion failed: %s", e)
         return jsonify({"error": f"TTS conversion failed: {e}"}), 500
@@ -38,5 +48,9 @@ def process_endpoint():
 def index():
     return render_template("index.html")
 
+@socketio.on("connect")
+def handle_connect():
+    emit("trace", {"message": "Connected to server. Ready to process your request."})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    socketio.run(app, debug=True)

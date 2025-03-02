@@ -8,8 +8,11 @@
     .container { max-width: 600px; margin: auto; }
     input[type="text"], textarea { width: 100%; padding: 10px; margin: 8px 0; }
     button { padding: 10px 20px; font-size: 16px; }
+    #status { border: 1px solid #ccc; padding: 10px; margin-top: 20px; max-height: 200px; overflow-y: auto; }
     .hidden { display: none; }
   </style>
+  <!-- Include Socket.IO client library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
 </head>
 <body>
   <div class="container">
@@ -22,15 +25,29 @@
       <button type="submit">Submit</button>
     </form>
     <div id="status" class="hidden">
-      <p>Processing your request, please wait...</p>
+      <p><strong>Status Updates:</strong></p>
     </div>
   </div>
   <script>
+    // Initialize Socket.IO connection and listen for trace messages
+    var socket = io();
+    socket.on('trace', function(data) {
+      var statusDiv = document.getElementById('status');
+      if (statusDiv.classList.contains('hidden')) {
+        statusDiv.classList.remove('hidden');
+      }
+      var p = document.createElement('p');
+      p.textContent = data.message;
+      statusDiv.appendChild(p);
+    });
+
     document.getElementById('interestForm').addEventListener('submit', async function(e) {
       e.preventDefault();
-      const userInfo = document.getElementById('user_info').value;
-      document.getElementById('status').classList.remove('hidden');
-      
+      var userInfo = document.getElementById('user_info').value;
+      var statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = "<p><strong>Status Updates:</strong></p>";
+      statusDiv.classList.remove('hidden');
+
       try {
         const response = await fetch('/process', {
           method: 'POST',
@@ -60,7 +77,6 @@
       } catch (error) {
         alert('An error occurred: ' + error);
       }
-      document.getElementById('status').classList.add('hidden');
     });
   </script>
 </body>
