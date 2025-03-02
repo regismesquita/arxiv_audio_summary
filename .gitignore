@@ -1,2 +1,5 @@
 cache/
+__init__.py
+*.pyc
 .DS_Store
+.aider*

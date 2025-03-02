@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>vibe: Article Summarization &amp; TTS Pipeline</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .container { max-width: 600px; margin: auto; }
+    input[type="text"], textarea { width: 100%; padding: 10px; margin: 8px 0; }
+    button { padding: 10px 20px; font-size: 16px; }
+    #status { border: 1px solid #ccc; padding: 10px; margin-top: 20px; max-height: 200px; overflow-y: auto; }
+    .hidden { display: none; }
+  </style>
+  <!-- Include Socket.IO client library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.1/socket.io.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Welcome to vibe</h1>
+    <p>Enter your interests below to generate a summary MP3 of the latest Computer Science research articles.</p>
+    <form id="interestForm">
+      <label for="user_info">Your Interests:</label>
+      <textarea id="user_info" name="user_info" rows="4" required></textarea>
+      <br>
+      <button type="submit">Submit</button>
+    </form>
+    <div id="status" class="hidden">
+      <p><strong>Status Updates:</strong></p>
+    </div>
+  </div>
+  <script>
+    // Initialize Socket.IO connection and listen for trace messages
+    var socket = io();
+    socket.on('trace', function(data) {
+      var statusDiv = document.getElementById('status');
+      if (statusDiv.classList.contains('hidden')) {
+        statusDiv.classList.remove('hidden');
+      }
+      var p = document.createElement('p');
+      p.textContent = data.message;
+      statusDiv.appendChild(p);
+    });
+
+    document.getElementById('interestForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var userInfo = document.getElementById('user_info').value;
+      var statusDiv = document.getElementById('status');
+      statusDiv.innerHTML = "<p><strong>Status Updates:</strong></p>";
+      statusDiv.classList.remove('hidden');
+
+      try {
+        const response = await fetch('/process', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            user_info: userInfo,
+            max_articles: 5,
+            new_only: false
+          })
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = 'summary.mp3';
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert('Error processing your request.');
+        }
+      } catch (error) {
+        alert('An error occurred: ' + error);
+      }
+    });
+  </script>
+</body>
+</html>

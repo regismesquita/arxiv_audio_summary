@@ -1,0 +1,8 @@
+[llms.low]
+model = "mistral/mistral-small-latest"
+
+[llms.medium]
+model = "mistral/mistral-small-latest"
+
+[llms.high]
+model = "mistral/mistral-small-latest"

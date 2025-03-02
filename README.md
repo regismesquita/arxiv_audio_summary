@@ -1,103 +1,149 @@
-# vibe: Article Summarization & TTS Pipeline
+# vibe: Your Personal AI Research Summarizer 🎧
 
-vibe is a Python-based pipeline that automatically fetches the latest Computer Science research articles from arXiv, filters them for relevance using a language model (LLM), converts article PDFs to Markdown with Docling, generates narrative summaries, and synthesizes the summaries into an MP3 audio file using a text-to-speech (TTS) system. This tool is ideal for users who prefer listening to curated research summaries on the go or integrating the process into a larger system via an API.
+**vibe** is a smart assistant that fetches the latest Computer Science research articles from arXiv, identifies the most relevant ones based on your interests, summarizes them into engaging narratives, and even reads them aloud by generating an MP3 audio summary. Perfect for staying informed effortlessly!
 
-## Features
+---
 
-- **Fetch Articles:** Retrieves the latest Computer Science articles from arXiv.
-- **Cache Mechanism:** Caches article metadata and converted content to speed up subsequent requests.
-- **Relevance Filtering:** Uses an LLM to filter articles based on user-provided interests.
-- **PDF Conversion:** Converts PDF articles to Markdown format using Docling.
-- **Summarization:** Generates a fluid, narrative-style summary for each relevant article with the help of an LLM.
-- **Text-to-Speech:** Converts the final narrative summary into an MP3 file using KPipeline.
-- **Flask API:** Exposes the functionality via a RESTful endpoint for dynamic requests.
-- **CLI and Server Modes:** Run the pipeline as a one-off CLI command or as a continuously running Flask server.
+## 🎯 What Can vibe Do for You?
 
-## Why Use vibe?
+- Automatically fetch the newest CS research from arXiv.
+- Filter and rank articles tailored to your specific interests.
+- Summarize articles into a smooth, narrative-friendly format.
+- Generate an MP3 audio summary to listen on-the-go.
+- Provide real-time progress updates while generating your summaries.
 
-- **Stay Updated:** Automatically curate and summarize the latest research articles so you can keep up with advancements in your field.
-- **Hands-Free Listening:** Enjoy audio summaries during your commute or while multitasking.
-- **Automated Workflow:** Seamlessly integrate multiple processing steps—from fetching and filtering to summarization and TTS.
-- **Flexible Deployment:** Use the CLI mode for quick summaries or deploy the Flask API for integration with other systems.
+---
 
-## Installation
+## 🚀 Quick Start Guide
 
-1. **Prerequisites:**
-   Ensure you have Python 3.x installed on your system.
+### ✅ Step 1: Installation
 
-2. **Clone the Repository:**
-   Clone this repository to your local machine.
+Make sure you have Python (3.x) installed, then run:
 
-3. **Install Dependencies:**
-   Navigate to the project directory and install the required packages:
-   ```
-   pip install -r requirements.txt
-   ```
-
-## Usage
-
-### CLI Mode
-
-Run the pipeline once to generate an MP3 summary file. For example:
+```bash
+pip install -r requirements.txt
 ```
-python vibe.py --generate --prompt "I live in a mid-sized European city, working in the tech industry on AI-driven automation solutions. I prefer content focused on deep learning and reinforcement learning applications, and I want to filter out less relevant topics. Only include articles that are rated 9 or 10 on a relevance scale from 0 to 10." --max-articles 10 --output summary_cli.mp3
+
+### ✅ Step 2: Clone vibe to Your Machine
+
+```bash
+git clone <repository_url>
+cd vibe
 ```
-This command fetches the latest articles from arXiv, filters and ranks them based on your specified interests, generates narrative summaries, and converts the final summary into an MP3 file named `summary_cli.mp3`.
 
-### Server Mode
+### 🛠 Running vibe
 
-Alternatively, you can run vibe as a Flask server:
+You can use vibe in two ways: via a command-line interface (CLI) or through a friendly web interface with real-time updates.
+
+#### 1️⃣ CLI Mode
+
+To quickly generate an audio summary directly from your terminal:
+
+```bash
+python vibe/main.py --generate --prompt "Your interests here" --max-articles 5 --output summary.mp3
 ```
-python vibe.py --serve
+
+Your audio summary will be saved as `summary.mp3`. Just play and enjoy!
+
+#### 2️⃣ Server Mode (Recommended 🎉)
+
+We’ve built a simple, intuitive web landing page that lets you interact easily with vibe:
+
+First, launch the Flask server by running:
+
+```bash
+python vibe/main.py --serve
 ```
-Once the server is running, you can process requests by sending a POST request to the `/process` endpoint. For example:
+
+Then open your web browser and go to:
+
 ```
-curl -X POST http://127.0.0.1:5000/process \
-     -H "Content-Type: application/json" \
-     -d '{"user_info": "Your interests here", "max_articles": 5, "new_only": false}'
+http://127.0.0.1:5000
 ```
-The server processes the articles, generates an MP3 summary, and returns the file as a downloadable response.
 
-## Environment Variables
+#### ✨ How It Works:
 
-The following environment variables can be set to customize the behavior of vibe:
+- Enter your interests directly on the landing page.
+- Click “Submit” and relax while vibe fetches and summarizes the best articles for you.
+- Watch live status updates appear on-screen, letting you know exactly what’s happening behind the scenes.
+- Once complete, an audio summary (`summary.mp3`) will automatically download. It’s that easy!
 
-- `ARXIV_URL`: The URL used to fetch the latest arXiv articles. Defaults to `https://arxiv.org/list/cs/new`.
-- `LLM_URL`: The URL for the language model endpoint. Defaults to `http://127.0.0.1:4000/v1/chat/completions` (this is a litellm instance).
-- `MODEL_NAME`: The model name to be used by the LLM. Defaults to `mistral-small-latest`.
+---
 
-Note that using the `mistral-small` model through their cloud service typically costs a few cents per run and completes the summarization process in around 4 minutes. It is also possible to run vibe with local LLMs (such as qwen 2.5 14b or mistral-small), although these local runs may take up to an hour.
+## 🗄 API Documentation
 
-## Project Structure
+### Available Endpoints
 
-- **vibe.py:** Main application file containing modules for:
-  - Fetching and caching arXiv articles.
-  - Filtering articles for relevance.
-  - Converting PDFs to Markdown using Docling.
-  - Summarizing articles via an LLM.
-  - Converting text summaries to speech (MP3) using KPipeline.
-  - Exposing a Flask API for processing requests.
-- **requirements.txt:** Contains the list of Python packages required by the project.
-- **CACHE_DIR:** Directory created at runtime for caching articles and processed files.
+#### 1. `/process` (POST)
 
-## Dependencies
+**Description:** Generates a summary MP3 from provided user interests.
 
-The project relies on several key libraries:
-- Flask
-- requests
-- beautifulsoup4
-- soundfile
-- docling
-- kokoro
+**Request Body:**
 
-## Contributing
+```json
+{
+  "user_info": "Your interests here",
+  "max_articles": 5,  // Number of articles to process
+  "new_only": true    // Fetch only new articles not in the cache
+}
+```
 
-Contributions are welcome! Feel free to fork this repository and submit pull requests with improvements or bug fixes.
+**Response:**
 
-## License
+- **Success:** Returns a 200 status code with a generated MP3 file.
+- **Error:** Returns a 500 status code with an error message.
 
-This project is licensed under the MIT License.
+**Example:**
 
-## Acknowledgments
+```bash
+curl -X POST http://localhost:5000/process \
+  -H 'Content-Type: application/json' \
+  -d '{"user_info": "AI, Machine Learning", "max_articles": 5, "new_only": true}'
+```
 
-Thanks to the developers of [Docling](https://github.com/docling) and [Kokoro](https://github.com/kokoro) as well as the maintainers of BeautifulSoup and Flask for providing great tools that made this project possible.
+---
+
+## 🧪 Running Tests
+
+Ensure vibe stays reliable with the built-in test suite. Just run:
+
+```bash
+make test
+```
+
+Or manually:
+
+```bash
+python -m unittest discover -s tests
+```
+
+---
+
+## ⚙️ Makefile Commands
+
+We’ve made common tasks simpler:
+
+- `make test` – Runs unit tests.
+- `make run` – Runs vibe in CLI mode (you can customize this command inside the Makefile).
+- `make serve` – Starts the Flask server with the web interface.
+- `make clean` – Cleans temporary files (cache, temporary directories).
+
+---
+
+## 🌎 Environment Variables
+
+Customize vibe with these optional environment variables:
+
+- `ARXIV_URL` – URL for fetching articles from arXiv.
+- `LLM_URL` – URL of your preferred language model endpoint.
+- `MODEL_NAME` – Name of the language model to use.
+
+---
+
+## 📜 License
+
+vibe is open source under the MIT License. Use it, modify it, enjoy it!
+
+---
+
+✨ Enjoy exploring the latest research effortlessly with vibe! ✨
