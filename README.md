@@ -70,6 +70,39 @@ http://127.0.0.1:5000
 
 ---
 
+## 🗄 API Documentation
+
+### Available Endpoints
+
+#### 1. `/process` (POST)
+
+**Description:** Generates a summary MP3 from provided user interests.
+
+**Request Body:**
+
+```json
+{
+  "user_info": "Your interests here",
+  "max_articles": 5,  // Number of articles to process
+  "new_only": true    // Fetch only new articles not in the cache
+}
+```
+
+**Response:**
+
+- **Success:** Returns a 200 status code with a generated MP3 file.
+- **Error:** Returns a 500 status code with an error message.
+
+**Example:**
+
+```bash
+curl -X POST http://localhost:5000/process \
+  -H 'Content-Type: application/json' \
+  -d '{"user_info": "AI, Machine Learning", "max_articles": 5, "new_only": true}'
+```
+
+---
+
 ## 🧪 Running Tests
 
 Ensure vibe stays reliable with the built-in test suite. Just run:

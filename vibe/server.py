@@ -2,7 +2,6 @@ from flask import Flask, send_file, request, jsonify, render_template
 import logging
 from vibe.orchestrator import process_articles
 from vibe.config import CACHE_DIR
-
 from flask_socketio import SocketIO, emit
 
 logger = logging.getLogger(__name__)
@@ -24,7 +23,15 @@ def process_endpoint():
     # Define trace_callback to emit trace messages via WebSockets
     def trace_callback(message):
         socketio.emit("trace", {"message": message})
-    final_summary = process_articles(user_info, arxiv_url=None, llm_url=None, model_name=None, max_articles=max_articles, new_only=new_only, trace_callback=trace_callback)
+
+    final_summary = process_articles(
+        user_info,
+        arxiv_url=None,
+        max_articles=max_articles,
+        new_only=new_only,
+        trace_callback=trace_callback,
+        llm_level="medium"  # hard-coded here; could be user-configurable
+    )
     if not final_summary.strip():
         logger.error("No summaries generated.")
         return jsonify({"error": "No summaries generated."}), 500

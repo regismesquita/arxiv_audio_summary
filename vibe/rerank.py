@@ -1,11 +1,12 @@
 import json
 import re
-import requests
 import logging
+
+from .llm import chat_llm
 
 logger = logging.getLogger(__name__)
 
-def rerank_articles(articles, user_info, llm_url=None, model_name=None):
+def rerank_articles(articles, user_info, llm_level="medium"):
     """
     Calls the LLM to reorder the articles by importance. Returns the reordered list.
     Expects a JSON response with a 'ranking' key pointing to a list of article IDs.
@@ -13,31 +14,21 @@ def rerank_articles(articles, user_info, llm_url=None, model_name=None):
     if not articles:
         return []
 
-    if llm_url is None or model_name is None:
-        from .config import DEFAULT_LLM_URL, DEFAULT_MODEL_NAME
-        llm_url = llm_url or DEFAULT_LLM_URL
-        model_name = model_name or DEFAULT_MODEL_NAME
-
     logger.info("Starting rerank for %d articles.", len(articles))
     prompt_lines = [
         f"User info: {user_info}\n",
-        'Please rank the following articles from most relevant to least relevant. Return your answer as valid JSON in the format: { "ranking": [ "id1", "id2", ... ] }.',
+        ('Please rank the following articles from most relevant to least relevant. '
+         'Return your answer as valid JSON in the format: { "ranking": [ "id1", "id2", ... ] }.')
     ]
     for article in articles:
         prompt_lines.append(
             f"Article ID: {article['id']}\nTitle: {article['title']}\nAbstract: {article['abstract']}\n"
         )
     prompt = "\n".join(prompt_lines)
-    payload = {"model": model_name, "messages": [{"role": "user", "content": prompt}]}
 
     try:
-        response = requests.post(llm_url, json=payload)
-        if response.status_code != 200:
-            logger.error("LLM reranking request failed with status code: %d", response.status_code)
-            return articles
-        data = response.json()
-        text_response = data["choices"][0]["message"]["content"].strip()
-        match = re.search(r"\{.*\}", text_response, re.DOTALL)
+        response_text = chat_llm(prompt, level=llm_level)
+        match = re.search(r"\{.*\}", response_text, re.DOTALL)
         if not match:
             logger.error("No valid JSON found in rerank response.")
             return articles
