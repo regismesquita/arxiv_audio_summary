@@ -1,4 +1,4 @@
-from flask import Flask, send_file, request, jsonify
+from flask import Flask, send_file, request, jsonify, render_template
 import logging
 from .orchestrator import process_articles
 from .config import CACHE_DIR
@@ -33,6 +33,10 @@ def process_endpoint():
 
     logger.info("Process complete. Returning MP3 file.")
     return send_file(output_mp3, as_attachment=True)
+
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 if __name__ == "__main__":
     app.run(debug=True)
